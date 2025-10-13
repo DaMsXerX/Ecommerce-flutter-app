@@ -1,0 +1,226 @@
+Flutter Storage & Media Compliance Migration Guide
+
+Scope: Replace open_filex usage; remove READ_EXTERNAL_STORAGE/READ_MEDIA_*; keep one-time user selection for photos/videos; comply with Google Play Photo & Video Permissions policy.
+
+---
+SCAN RESULTS
+
+1) open_filex usage
+- pubspec.yaml
+  - dependency: open_filex: 4.7.0
+- lib/features/auth/screens/signupScreen.dart
+  - L20: import 'package:open_filex/open_filex.dart';
+  - L503: OpenFilex.open(state.downloadedFilePath);
+  - L524: OpenFilex.open(downloadFilePath);
+
+2) Permission references (Android manifests)
+- Source manifests
+  - android/app/src/main/AndroidManifest.xml: no READ_EXTERNAL_STORAGE / READ_MEDIA_* found
+  - android/app/src/debug/AndroidManifest.xml: no occurrences
+  - android/app/src/profile/AndroidManifest.xml: no occurrences
+- Merged/packaged manifests (build outputs)
+  - build/app/.../AndroidManifest.xml: contains
+    - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+    - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+  - build/open_filex/.../AndroidManifest.xml: contains same three permissions
+  - Cause: permissions merged from the open_filex plugin
+
+3) Direct storage access touchpoints (review needed to ensure compliance)
+- lib/core/api/apiService.dart: import 'dart:io';
+- lib/utils/utils.dart:
+  - L201: FilePicker.platform.pickFiles(...)
+  - L208: files.addAll(result.paths.map((path) => File(path!)).toList());
+  - L210: files.add(File(result.files.single.path!));
+  - L293: Image.file(file).image
+  - L487: final file = File(path);
+  - L544: final tempFile = File(sourcePath);
+  - L546: final downloadedFile = File(destinationPath);
+- lib/utils/designConfig.dart: import 'dart:io';
+- lib/features/auth/screens/signupScreen.dart: import 'dart:io'; (plus OpenFilex usages above)
+- lib/utils/notificationUtility.dart: import 'dart:io';
+- lib/features/orders/blocs/downloadFileCubit.dart: import 'dart:io';
+
+Note: Using File for app-private directories is fine. Avoid requiring broad storage/media runtime permissions on Android 13+; prefer system pickers and content URIs.
+
+---
+MIGRATION PLAN (Step-by-step)
+
+Step 1 — Remove open_filex and add compliant pickers
+1. In pubspec.yaml, remove:
+   - open_filex: 4.7.0
+2. Ensure these are present/added:
+   - image_picker: ^1.x (modern version uses Android Photo Picker on API 33+)
+   - file_picker: keep (already in project) for documents only
+   - Optional for sharing instead of "open": share_plus: ^10.x
+3. Run:
+   - flutter clean
+   - flutter pub get
+
+Step 2 — Replace OpenFilex.open(...) calls
+1. For images/videos: do not "open" from storage; show inside the app or let user pick via Photo Picker.
+   - Replace OpenFilex.open(downloadFilePath) with in-app viewing or share intent (see code below).
+2. For documents (PDF, etc.): either
+   - View inside app with a viewer (e.g., pdfx/syncfusion viewer), or
+   - Share with share_plus to let the user choose an app (no broad permissions required).
+
+Step 3 — Adopt system pickers for user selection
+- Use image_picker for photos/videos.
+- Use file_picker for documents only when necessary.
+- Do NOT request READ_EXTERNAL_STORAGE or READ_MEDIA_*.
+
+Step 4 — Strip forbidden permissions from manifest
+- Keep your existing manifest without these permissions.
+- If merged manifests still include them from transitive libs, explicitly remove via tools:node="remove" (see snippet).
+
+Step 5 — Validate and test
+- Build debug and release, verify merged manifest does not include READ_* permissions.
+- Test on Android 13/14 devices/emulators.
+
+---
+CODE SNIPPETS
+
+A) Dart: Pick a single image (Android 13+ uses system Photo Picker)
+
+Dependencies:
+- image_picker in pubspec.yaml
+
+Example:
+```dart
+import 'package:image_picker/image_picker.dart';
+
+final ImagePicker _picker = ImagePicker();
+
+Future<void> pickImageOnce() async {
+  final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+  if (image == null) return; // user cancelled
+  // Use image.path inside app (e.g., display with Image.file/FileImage)
+}
+```
+
+B) Dart: Pick a single video
+```dart
+import 'package:image_picker/image_picker.dart';
+
+final ImagePicker _picker = ImagePicker();
+
+Future<void> pickVideoOnce() async {
+  final XFile? video = await _picker.pickVideo(source: ImageSource.gallery);
+  if (video == null) return;
+  // Play video via a player plugin or in-app player
+}
+```
+
+C) Dart: Pick a document with file_picker (no broad permissions)
+```dart
+import 'package:file_picker/file_picker.dart';
+
+Future<void> pickDocument() async {
+  final FilePickerResult? result = await FilePicker.platform.pickFiles(
+    type: FileType.custom,
+    allowedExtensions: ['pdf', 'doc', 'docx'],
+  );
+  if (result == null) return;
+  final String? path = result.files.single.path; // content URI or SAF-backed path
+  if (path == null) return;
+  // Open inside app (preferred) or share externally (see below)
+}
+```
+
+D) Dart: Replace OpenFilex.open(...) with share_plus (open-with chooser)
+```dart
+import 'package:share_plus/share_plus.dart';
+
+Future<void> shareOrOpenFile(String filePath) async {
+  final XFile xfile = XFile(filePath);
+  await Share.shareXFiles([xfile]); // system chooser; no READ_* permission required
+}
+```
+
+E) AndroidManifest.xml: Remove forbidden permissions introduced by dependencies
+- Ensure manifest root includes tools namespace.
+- Add removal entries only if merged manifests still include them after removing open_filex.
+
+Snippet (android/app/src/main/AndroidManifest.xml):
+```xml
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- keep your other entries -->
+
+    <!-- Strip storage/media permissions if merged from dependencies -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
+</manifest>
+```
+
+F) Optional: Keep legacy permission only on Android <= 32
+```xml
+<uses-permission
+    android:name="android.permission.READ_EXTERNAL_STORAGE"
+    android:maxSdkVersion="32" />
+```
+(Use only if you absolutely need legacy behavior on Android 12L and below.)
+
+---
+FILE-BY-FILE CHANGE HINTS
+
+1) lib/features/auth/screens/signupScreen.dart
+- Remove: import 'package:open_filex/open_filex.dart';
+- Replace:
+  - OpenFilex.open(state.downloadedFilePath); -> await shareOrOpenFile(state.downloadedFilePath);
+  - OpenFilex.open(downloadFilePath); -> await shareOrOpenFile(downloadFilePath);
+- Add helper function (see snippet D) and import share_plus.
+
+2) lib/utils/utils.dart
+- Calls to File(...) that point to app-private dirs are fine.
+- For user selection, prefer image_picker/file_picker results and operate on returned URIs/paths directly.
+
+---
+CHECKLIST FOR PLAY-READY AAB (No Photo & Video Permissions rejection)
+
+1) Dependencies
+- Remove open_filex from pubspec.yaml
+- Add/verify: image_picker, file_picker, share_plus
+
+2) Manifest hygiene
+- Ensure no <uses-permission> for READ_EXTERNAL_STORAGE, READ_MEDIA_IMAGES, READ_MEDIA_VIDEO in source manifest
+- If merged manifests still include them, add tools:node="remove" lines (snippet E)
+
+3) Rebuild cleanly
+- flutter clean
+- Delete the build/ directory if necessary
+- flutter pub get
+- flutter build appbundle --release
+
+4) Verify merged manifest
+- Inspect build/app/intermediates/merged_manifests/release/.../AndroidManifest.xml
+- Confirm the three READ_* permissions are absent
+
+5) Test on Android 13/14
+- Pick image/video via image_picker (Photo Picker)
+- Pick a document via file_picker
+- Open downloaded/exported files using in-app viewers or share_plus chooser
+- Confirm there is NO runtime prompt for Photos/Videos permissions
+
+6) Play Console submission
+- Bump versionCode/versionName
+- Upload AAB
+- In App Content > Permissions, verify Photos/Videos permissions are not requested
+
+---
+POTENTIAL ISSUES WHEN REMOVING open_filex & REPLACEMENTS
+
+- Issue: Cannot "open in external app" directly via OpenFilex.open(path)
+  - Replacement: share_plus (Share.shareXFiles) to invoke system chooser without storage permissions
+  - Alternative: Render inside app (e.g., Image.file, pdf viewers) for best UX
+
+- Issue: Paths vs content URIs
+  - Use the path/URI provided by image_picker/file_picker; they handle SAF/Photo Picker and avoid broad permissions
+
+- Issue: Files saved to public storage
+  - Prefer app-private cache via path_provider; if exporting to public, use SAF-oriented packages (e.g., file_picker saveFile, flutter_file_dialog) rather than raw File writes to shared storage
+
+---
+END OF GUIDE

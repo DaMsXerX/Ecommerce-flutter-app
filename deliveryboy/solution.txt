@@ -1,0 +1,108 @@
+Findings: Android permission usage in this project
+
+Searched for:
+- android.permission.READ_MEDIA_IMAGES
+- android.permission.READ_MEDIA_VIDEO
+- android.permission.READ_EXTERNAL_STORAGE
+
+Direct source manifests
+- android/app/src/main/AndroidManifest.xml: No occurrences of the above permissions
+- android/app/src/debug/AndroidManifest.xml: No occurrences
+- android/app/src/profile/AndroidManifest.xml: No occurrences
+
+Found in merged/packaged manifests (build outputs)
+- build/app/intermediates/bundle_manifest/release/processApplicationManifestReleaseForBundle/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+- build/app/intermediates/packaged_manifests/release/processReleaseManifestForPackage/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+- build/app/intermediates/merged_manifests/release/processReleaseManifest/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+- build/app/intermediates/merged_manifest/release/processReleaseMainManifest/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+- build/app/intermediates/packaged_manifests/debug/processDebugManifestForPackage/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+- build/app/intermediates/merged_manifests/debug/processDebugManifest/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+- build/app/intermediates/merged_manifest/debug/processDebugMainManifest/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+Found in plugin/library merged manifests
+- build/open_filex/intermediates/aapt_friendly_merged_manifests/release/processReleaseManifest/aapt/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+- build/open_filex/intermediates/merged_manifest/release/processReleaseManifest/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+- build/open_filex/intermediates/aapt_friendly_merged_manifests/debug/processDebugManifest/aapt/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+- build/open_filex/intermediates/merged_manifest/debug/processDebugManifest/AndroidManifest.xml
+  - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" />
+  - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" />
+
+Dependency causing the permissions
+- The permissions are introduced by the OpenFileX plugin (pubspec dependency: open_filex: 4.7.0).
+- These entries appear in the merged manifests under build/open_filex/..., which are then merged into the app manifest during the Android build.
+- Your own app manifests under android/app/src/* do not declare these permissions directly.
+
+Likely cause of the Play Console warning
+- A plugin (open_filex) is adding broad storage/media read permissions during manifest merge.
+- If you removed/changed this recently but still see warnings in Play Console, an older artifact (previous release) may still be active.
+
+How to fix
+Option A: Remove or replace the dependency if not required
+1) If opening files with OpenFileX is not essential, remove the dependency from pubspec.yaml (open_filex: 4.7.0) and run:
+   - flutter clean
+   - flutter pub get
+   - Rebuild and upload a new version.
+
+Option B: Update to a version that avoids legacy storage permissions
+1) Check if a newer open_filex release reduces/removes READ_EXTERNAL_STORAGE or READ_MEDIA_* declarations for SDK 33+.
+2) Update pubspec.yaml to the latest compatible version.
+3) flutter clean && flutter pub get, then rebuild.
+
+Option C: Override/strip permissions in your app manifest (when safe)
+1) In android/app/src/main/AndroidManifest.xml, add tools namespace if missing:
+   - <manifest xmlns:android="http://schemas.android.com/apk/res/android" xmlns:tools="http://schemas.android.com/tools">
+2) Remove unwanted permissions via tools:node="remove":
+   - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" tools:node="remove" />
+   - <uses-permission android:name="android.permission.READ_MEDIA_IMAGES" tools:node="remove" />
+   - <uses-permission android:name="android.permission.READ_MEDIA_VIDEO" tools:node="remove" />
+3) Only do this if your app truly does not need these permissions at runtime; otherwise, functionality relying on them may break.
+
+Option D: Limit legacy permission to older Android versions (if still needed)
+1) Keep READ_EXTERNAL_STORAGE only for older devices using maxSdkVersion:
+   - <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+2) Prefer scoped permissions and the Storage Access Framework for SDK 33+.
+
+After changes
+1) Run: flutter clean
+2) Delete the build/ directory if needed
+3) Rebuild both debug and release builds
+4) Upload a new release to Play Console and check the App Content/Permissions report
+
+If none were found in current code
+- If you still see the permission in Play Console after removing/updating the plugin and stripping permissions, it is very likely coming from an older release still active in the Play Console. Deactivate the old artifact or roll out a new release without the permission.
+
+References in your project
+- Dependency list (pubspec.yaml): open_filex: 4.7.0
+- App manifest sets android:requestLegacyExternalStorage="true" which may interact with storage behaviors but is not, by itself, a permission declaration.
+

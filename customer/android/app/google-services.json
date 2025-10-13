@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "447152906415",
+    "project_id": "eshop-b68fc",
+    "storage_bucket": "eshop-b68fc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:447152906415:android:7ed7da86cd8fc448a2345a",
+        "android_client_info": {
+          "package_name": "com.sanwariya.customer"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "447152906415-el051qu62lpn4s3p2ton76h4qpbhn83e.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sanwariya.customer",
+            "certificate_hash": "eb7359ca4ad62fdcc37ca10ec7ebc3d0b96bac50"
+          }
+        },
+        {
+          "client_id": "447152906415-spa04v5mtu7ucdie8423e2855qju7r2v.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.sanwariya.customer",
+            "certificate_hash": "c4c5bb5144ed1254a3cf8d8d5b0eedcbc795291e"
+          }
+        },
+        {
+          "client_id": "447152906415-m759u5jivj1s9c7eldpl48ddkj99poam.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDx5yb5zBDykHKAEu7XxPBi8BdRGJwD6zI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "447152906415-m759u5jivj1s9c7eldpl48ddkj99poam.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,0 +1,481 @@
+# eShopPlus Mobile App - Project Information & Troubleshooting Guide
+
+## Project Overview
+**eShopPlus** is a comprehensive Flutter-based e-commerce mobile application (Version 1.0.6) designed for customers to browse, purchase, and manage orders from multiple stores. The app provides a complete shopping experience with features like product discovery, cart management, multiple payment options, order tracking, and customer support.
+
+## Technical Specifications
+- **Framework**: Flutter (>=3.7.0)
+- **Dart SDK**: >=3.3.0 <4.0.0
+- **Architecture**: BLoC (Business Logic Component) pattern
+- **State Management**: flutter_bloc
+- **Local Storage**: Hive database
+- **Backend API**: RESTful API
+- **Firebase Integration**: Authentication, Messaging, Core
+- **Package Name**: 
+  - Android: com.sanwariya.customer
+  - iOS: com.wrteam.eshop.pro
+
+## Core Features & Functionality
+
+### 1. Authentication System
+**Location**: `lib/ui/auth/`
+
+**Features**:
+- Google Sign-In integration
+- Apple Sign-In support
+- Phone number authentication
+- Guest user mode
+- Firebase Authentication backend
+
+**Key Components**:
+- `AuthCubit`: Manages authentication state
+- `AuthRepository`: Handles authentication operations
+- `SignInCubit`: Manages sign-in process
+- `SignUpCubit`: Manages user registration
+
+**Troubleshooting**:
+- **Login Issues**: Check Firebase configuration in `firebase_options.dart`
+- **Google Sign-In Fails**: Verify SHA-1 fingerprints in Firebase console
+- **Apple Sign-In Issues**: Ensure proper Apple Developer account setup
+- **Token Expiry**: Check token refresh mechanism in `AuthRepository`
+
+### 2. Main Navigation & Home Screen
+**Location**: `lib/ui/mainScreen.dart`, `lib/ui/home/`
+
+**Features**:
+- Bottom navigation with 5 tabs: Home, Categories, Explore, Cart, Profile
+- Home screen with multiple sections:
+  - Product sliders/banners
+  - Category sliders
+  - Featured sellers
+  - Most selling products
+  - Offers and promotions
+  - Brand sections
+
+**Key Components**:
+- `MainScreen`: Main navigation container
+- `HomeScreen`: Home page with product sections
+- `SliderCubit`: Manages banner/slider data
+- `CategorySliderCubit`: Handles category display
+- `FeaturedSellerCubit`: Manages featured sellers
+- `MostSellingProductsCubit`: Handles best-selling products
+
+**Troubleshooting**:
+- **Navigation Issues**: Check route definitions in `lib/core/routes/routes.dart`
+- **Home Screen Not Loading**: Verify API endpoints in `lib/core/api/apiEndPoints.dart`
+- **Slider Not Working**: Check image URLs and network connectivity
+- **Categories Not Showing**: Verify category API response format
+
+### 3. Product Management & Discovery
+**Location**: `lib/commons/product/`, `lib/ui/explore/`
+
+**Features**:
+- Product listing with filters (price, brand, category, rating)
+- Search functionality with autocomplete
+- Product details with variants, images, reviews
+- Similar products suggestions
+- Product comparison
+- Wishlist/favorites management
+- Combo products support
+
+**Key Components**:
+- `ProductsCubit`: Manages product data
+- `ComboProductsCubit`: Handles combo products
+- `ProductRepository`: API calls for products
+- `ProductDetailsScreen`: Individual product view
+- `ExploreScreen`: Product discovery and filtering
+
+**Troubleshooting**:
+- **Products Not Loading**: Check API connectivity and store ID
+- **Search Not Working**: Verify search API endpoint
+- **Filters Not Applied**: Check filter parameter formatting
+- **Product Images Not Loading**: Verify image URLs and CDN
+- **Wishlist Issues**: Check Hive database initialization
+
+### 4. Shopping Cart System
+**Location**: `lib/ui/cart/`
+
+**Features**:
+- Add/remove products from cart
+- Quantity management
+- Save for later functionality
+- Cart persistence using Hive
+- Delivery charge calculation
+- Promo code application
+- Cart validation and stock checking
+
+**Key Components**:
+- `CartScreen`: Main cart interface
+- `ManageCartCubit`: Cart operations
+- `GetUserCartCubit`: Fetches user cart
+- `PlaceOrderCubit`: Handles order placement
+- `CartRepository`: Cart API operations
+- `CartItem`: Hive model for local storage
+
+**Troubleshooting**:
+- **Cart Not Saving**: Check Hive database initialization
+- **Quantity Update Fails**: Verify cart API parameters
+- **Promo Code Not Working**: Check promo code validation logic
+- **Delivery Charges Wrong**: Verify address and delivery zone settings
+- **Cart Sync Issues**: Check user authentication state
+
+### 5. Order Management
+**Location**: `lib/ui/profile/orders/`
+
+**Features**:
+- Order placement with multiple payment options
+- Order history and tracking
+- Order status updates
+- Order cancellation
+- Invoice generation
+- Order details with product information
+
+**Key Components**:
+- `OrdersCubit`: Manages order data
+- `UpdateOrderCubit`: Handles order updates
+- `OrderRepository`: Order API operations
+- `MyOrderScreen`: Order listing interface
+
+**Troubleshooting**:
+- **Order Placement Fails**: Check payment method configuration
+- **Order Status Not Updating**: Verify notification system
+- **Order History Missing**: Check user authentication and API calls
+- **Invoice Generation Issues**: Verify PDF generation dependencies
+
+### 6. Payment Integration
+**Location**: `lib/ui/profile/transaction/`, `lib/ui/cart/screens/`
+
+**Supported Payment Methods**:
+- Cash on Delivery (COD)
+- Razorpay
+- Stripe
+- PayPal
+- PhonePe
+- Paystack
+- Bank Transfer
+
+**Key Components**:
+- `PaymentMethodCubit`: Manages payment methods
+- `TransactionRepository`: Payment API operations
+- `SelectPaymentScreen`: Payment method selection
+- `PlaceOrderScreen`: Order placement with payment
+
+**Troubleshooting**:
+- **Payment Gateway Fails**: Check API keys and configuration
+- **Razorpay Issues**: Verify Razorpay credentials in backend
+- **Stripe Problems**: Check Stripe publishable key
+- **PayPal Integration**: Verify PayPal SDK configuration
+- **PhonePe Issues**: Check PhonePe merchant credentials
+
+### 7. Address Management
+**Location**: `lib/ui/profile/address/`
+
+**Features**:
+- Add/edit/delete delivery addresses
+- GPS location picker
+- Address validation
+- Default address setting
+- Delivery zone checking
+- City and pincode management
+
+**Key Components**:
+- `GetAddressCubit`: Fetches user addresses
+- `AddNewAddressCubit`: Manages address operations
+- `AddressRepository`: Address API operations
+- `MyAddressScreen`: Address listing
+- `AddNewAddressScreen`: Address creation/editing
+
+**Troubleshooting**:
+- **Address Not Saving**: Check address validation rules
+- **Location Picker Issues**: Verify GPS permissions
+- **Delivery Zone Problems**: Check pincode validation API
+- **Address Deletion Fails**: Verify address ID and user permissions
+
+### 8. User Profile Management
+**Location**: `lib/ui/profile/`
+
+**Features**:
+- User profile editing
+- Wallet management
+- Transaction history
+- Settings and preferences
+- Language selection
+- Notification preferences
+- Customer support chat
+
+**Key Components**:
+- `ProfileScreen`: Main profile interface
+- `EditProfileScreen`: Profile editing
+- `UserDetailsCubit`: Manages user data
+- `UpdateUserCubit`: Handles profile updates
+- `SettingsAndLanguagesCubit`: Manages app settings
+
+**Troubleshooting**:
+- **Profile Update Fails**: Check user permissions and API
+- **Wallet Issues**: Verify wallet API integration
+- **Settings Not Saving**: Check SharedPreferences implementation
+- **Language Change Problems**: Verify localization files
+
+### 9. Notification System
+**Location**: `lib/ui/notification/`
+
+**Features**:
+- Push notifications via Firebase
+- In-app notification center
+- Order status notifications
+- Promotional notifications
+- Chat message notifications
+
+**Key Components**:
+- `NotificationCubit`: Manages notifications
+- `NotificationRepository`: Notification API operations
+- `NotificationScreen`: Notification listing
+- `NotificationUtility`: Firebase messaging setup
+
+**Troubleshooting**:
+- **Push Notifications Not Received**: Check Firebase configuration
+- **Notification Permission Denied**: Verify permission handling
+- **In-App Notifications Missing**: Check notification API calls
+- **FCM Token Issues**: Verify Firebase token generation
+
+### 10. Customer Support & Chat
+**Location**: `lib/ui/profile/chat/`, `lib/ui/profile/customerSupport/`
+
+**Features**:
+- Real-time chat with support
+- Ticket management
+- FAQ system
+- Contact information
+- Chat history
+
+**Key Components**:
+- `ChatController`: Manages chat functionality
+- `ChatScreen`: Chat interface
+- Pusher integration for real-time messaging
+
+**Troubleshooting**:
+- **Chat Not Working**: Check Pusher configuration
+- **Messages Not Sending**: Verify chat API endpoints
+- **Real-time Updates Missing**: Check Pusher connection
+
+## Data Storage & Management
+
+### Local Storage (Hive)
+**Location**: `lib/core/constants/hiveConstants.dart`
+
+**Storage Boxes**:
+- `authBoxKey`: User authentication data
+- `settingsBoxKey`: App settings and preferences
+- `cartBoxKey`: Cart items (CartItem model)
+- `productsBoxKey`: Cached product data
+- `favoritesBoxKey`: User favorites
+- `promocodeBoxKey`: Promo codes
+- `searchBoxKey`: Search history
+
+**Troubleshooting**:
+- **Data Not Persisting**: Check Hive initialization in `main.dart`
+- **Cart Data Lost**: Verify CartItem adapter registration
+- **Settings Reset**: Check SharedPreferences vs Hive usage
+
+### API Integration
+**Location**: `lib/core/api/`
+
+**Key Files**:
+- `apiService.dart`: Main API service with Dio
+- `apiEndPoints.dart`: API endpoint definitions
+- `appConfig.dart`: App configuration and base URL
+
+**Troubleshooting**:
+- **API Calls Failing**: Check base URL and network connectivity
+- **Authentication Errors**: Verify token handling
+- **Timeout Issues**: Check API timeout configurations
+
+## Common Issues & Solutions
+
+### 1. App Crashes on Startup
+**Possible Causes**:
+- Firebase not initialized properly
+- Hive database not initialized
+- Missing dependencies
+- Incorrect API configuration
+
+**Solutions**:
+- Check Firebase configuration in `firebase_options.dart`
+- Verify Hive initialization in `main.dart`
+- Run `flutter pub get` to install dependencies
+- Check API base URL in `appConfig.dart`
+
+### 2. Login/Authentication Issues
+**Possible Causes**:
+- Firebase configuration mismatch
+- Google Sign-In SHA-1 fingerprint issues
+- Network connectivity problems
+- API endpoint errors
+
+**Solutions**:
+- Verify Firebase project configuration
+- Check SHA-1 fingerprints in Firebase console
+- Test network connectivity
+- Check authentication API endpoints
+
+### 3. Products Not Loading
+**Possible Causes**:
+- API connectivity issues
+- Store ID not set
+- Network timeout
+- API response format changes
+
+**Solutions**:
+- Check network connectivity
+- Verify store ID in API calls
+- Check API timeout settings
+- Validate API response format
+
+### 4. Cart Issues
+**Possible Causes**:
+- Hive database not initialized
+- Cart API errors
+- User authentication problems
+- Local storage corruption
+
+**Solutions**:
+- Check Hive initialization
+- Verify cart API endpoints
+- Ensure user is authenticated
+- Clear app data and reinstall
+
+### 5. Payment Gateway Failures
+**Possible Causes**:
+- Incorrect API keys
+- Payment gateway configuration issues
+- Network connectivity problems
+- Currency/amount formatting issues
+
+**Solutions**:
+- Verify payment gateway credentials
+- Check payment gateway configuration
+- Test network connectivity
+- Validate amount and currency formatting
+
+### 6. Push Notifications Not Working
+**Possible Causes**:
+- Firebase configuration issues
+- FCM token not generated
+- Notification permissions not granted
+- Backend notification service down
+
+**Solutions**:
+- Check Firebase project configuration
+- Verify FCM token generation
+- Request notification permissions
+- Check backend notification service
+
+## Development & Debugging Tips
+
+### 1. Enable Debug Mode
+- Set `debugShowCheckedModeBanner: false` in `main.dart`
+- Use Flutter Inspector for widget debugging
+- Enable network logging in API service
+
+### 2. API Testing
+- Use tools like Postman to test API endpoints
+- Check API response format and status codes
+- Verify authentication headers
+
+### 3. Local Storage Debugging
+- Use Hive Inspector for database debugging
+- Check SharedPreferences values
+- Monitor data persistence
+
+### 4. Performance Optimization
+- Use `flutter analyze` to check code quality
+- Monitor memory usage with Flutter DevTools
+- Optimize image loading and caching
+
+## Dependencies & Packages
+
+### Core Dependencies
+- `flutter_bloc`: State management
+- `hive`: Local database
+- `dio`: HTTP client
+- `get`: Navigation and dependency injection
+- `firebase_core`: Firebase integration
+- `firebase_auth`: Authentication
+- `firebase_messaging`: Push notifications
+
+### UI Dependencies
+- `flutter_svg`: SVG support
+- `cached_network_image`: Image caching
+- `google_fonts`: Typography
+- `shimmer`: Loading animations
+- `lottie`: Animations
+
+### Payment Dependencies
+- `razorpay_flutter`: Razorpay integration
+- `flutter_stripe`: Stripe integration
+- `phonepe_payment_sdk`: PhonePe integration
+- `paypal_sdk`: PayPal integration
+
+### Utility Dependencies
+- `geolocator`: Location services
+- `google_maps_flutter`: Maps integration
+- `image_picker`: Image selection
+- `share_plus`: Sharing functionality
+- `url_launcher`: External links
+
+## File Structure Overview
+
+```
+lib/
+├── commons/           # Shared components and models
+├── core/             # Core functionality (API, routes, themes)
+├── ui/               # User interface screens and widgets
+│   ├── auth/         # Authentication screens
+│   ├── cart/         # Shopping cart functionality
+│   ├── explore/      # Product discovery and search
+│   ├── home/         # Home screen components
+│   ├── profile/      # User profile and settings
+│   └── notification/ # Notification system
+├── utils/            # Utility functions
+└── main.dart         # App entry point
+```
+
+## Configuration Files
+
+### Important Configuration Files
+- `pubspec.yaml`: Dependencies and app metadata
+- `android/app/google-services.json`: Firebase Android config
+- `ios/firebase_app_id_file.json`: Firebase iOS config
+- `lib/core/configs/appConfig.dart`: App configuration
+- `lib/firebase_options.dart`: Firebase options
+
+## Deployment Considerations
+
+### Android Deployment
+- Generate signed APK with proper keystore
+- Update `android/app/build.gradle` for release
+- Configure ProGuard rules for code obfuscation
+
+### iOS Deployment
+- Configure iOS signing certificates
+- Update `ios/Runner/Info.plist` for permissions
+- Test on physical iOS devices
+
+## Support & Maintenance
+
+### Regular Maintenance Tasks
+- Update dependencies regularly
+- Monitor API performance
+- Check Firebase quotas
+- Review crash reports
+- Update payment gateway configurations
+
+### Monitoring
+- Use Firebase Crashlytics for crash monitoring
+- Monitor API response times
+- Track user engagement metrics
+- Monitor payment success rates
+
+---
+
+**Note**: This document provides a comprehensive overview of the eShopPlus mobile application. For specific implementation details, refer to the source code in the respective directories mentioned above. Always test changes in a development environment before deploying to production.
