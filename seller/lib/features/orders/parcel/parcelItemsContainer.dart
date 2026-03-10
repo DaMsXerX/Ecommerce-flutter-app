@@ -1,3 +1,6 @@
+// new features soon
+
+
 import 'dart:async';
 
 import 'package:eshopplus_seller/commons/blocs/settingsAndLanguagesCubit.dart';
