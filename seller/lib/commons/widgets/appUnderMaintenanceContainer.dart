@@ -48,3 +48,5 @@ class AppUnderMaintenanceContainer extends StatelessWidget {
     );
   }
 }
+
+// UI will be updated soon
